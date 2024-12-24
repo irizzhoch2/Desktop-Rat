@@ -1,17 +1,14 @@
 #include <windows.h>
-#define WM_YPOSBOTTOM (WM_USER + 1)
 
-// Name der Fensterklasse
 const char CLASS_NAME[] = "MeineFensterklasse";
+static int yPosBottom = 0;
 
-
-// Fensterprozedur (verarbeitet Nachrichten wie Zerstören, Neuzeichnen etc.)
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
     case WM_DESTROY:
-        PostQuitMessage(0);  // Beendet die Nachrichten-Schleife
+        PostQuitMessage(0);  
         return 0;
 
     case WM_EXITSIZEMOVE:
@@ -20,30 +17,32 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         GetWindowRect(hwnd, &rect);
         int width  = rect.right - rect.left;
         int height = rect.bottom - rect.top;
+        int currentPos = rect.top;
 
-        int xPos = rect.left;  // Behalte die zuletzt genutzte X-Position
-        int yPos = 500;        // Deine Wunsch-Y-Position
+        int xPos = rect.left;  
 
+        while (currentPos < yPosBottom){
         SetWindowPos(
             hwnd,
             NULL,
             xPos,
-            yPos,
+            currentPos,
             width,
             height,
             SWP_NOZORDER | SWP_NOACTIVATE
         );
-
+        currentPos = currentPos + 1;
+        }
         return 0;
     }
 
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-// WinMain: Einstiegspunkt für Win32-GUI-Anwendungen
+// WinMain: Einstiegspunkt
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    // 1) Fensterklasse definieren
+   
     WNDCLASSEXA wc = { 0 };
     wc.cbSize        = sizeof(wc);                    // Größe der Struktur
     wc.style         = CS_HREDRAW | CS_VREDRAW;        // Neuzeichnen bei Größenänderung
@@ -60,10 +59,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     RECT rcWorkArea;
     SystemParametersInfoA(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
 
-    int yPosBottom = (rcWorkArea.bottom - height);
+    yPosBottom = (rcWorkArea.bottom - height) + 5;
     int xPosBottom = (rcWorkArea.right - rcWorkArea.left - width) / 2;
-
-    SendMessage(hwnd, WM_YPOSBOTTOM, yPosBottom, )
 
     // 2) Fenster erstellen
     HWND hwnd = CreateWindowExA(
