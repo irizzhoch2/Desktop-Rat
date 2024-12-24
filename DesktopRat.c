@@ -2,6 +2,8 @@
 
 const char CLASS_NAME[] = "MeineFensterklasse";
 static int yPosBottom = 0;
+static POINT mouseOffset;
+static BOOL isDragging = FALSE;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -11,29 +13,51 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         PostQuitMessage(0);  
         return 0;
 
-    case WM_EXITSIZEMOVE:
-        
-        RECT rect;
-        GetWindowRect(hwnd, &rect);
-        int width  = rect.right - rect.left;
-        int height = rect.bottom - rect.top;
-        int currentPos = rect.top;
+    case WM_LBUTTONDOWN:
+        isDragging = TRUE;
 
-        int xPos = rect.left;  
+        POINT mousePos;
+        GetCursorPos(&mousePos); // Mausposition in Bildschirmkoordinaten
+        ScreenToClient(hwnd, &mousePos); // Konvertiere zu Fensterkoordinaten
+        mouseOffset.x = mousePos.x;
+        mouseOffset.y = mousePos.y;
 
-        while (currentPos < yPosBottom){
-        SetWindowPos(
-            hwnd,
-            NULL,
-            xPos,
-            currentPos,
-            width,
-            height,
-            SWP_NOZORDER | SWP_NOACTIVATE
-        );
-        currentPos = currentPos + 1;
-        }
+        SetCapture(hwnd); // Setze Mausaufnahme, um Bewegung auch außerhalb des Fensters zu verfolgen
         return 0;
+
+    case WM_MOUSEMOVE:
+        if(isDragging){
+            RECT rect;
+            GetWindowRect(hwnd, &rect);
+            int width  = rect.right - rect.left;
+            int height = rect.bottom - rect.top;
+            int currentPos = rect.top;
+
+            int xPos = rect.left;  
+
+            while (currentPos < yPosBottom){
+            SetWindowPos(
+                hwnd,
+                NULL,
+                xPos,
+                currentPos,
+                width,
+                height,
+                SWP_NOZORDER | SWP_NOACTIVATE
+            );
+            currentPos++;
+            }
+            return 0;
+        }
+    case WM_LBUTTONUP:
+    // Beende das Verschieben
+    if (isDragging) {
+        isDragging = FALSE;
+        ReleaseCapture(); // Beende die Mausaufnahme
+    }
+    return 0;
+    
+
     }
 
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
