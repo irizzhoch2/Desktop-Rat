@@ -4,6 +4,8 @@ const char CLASS_NAME[] = "MeineFensterklasse";
 static int yPosBottom = 0;
 static POINT mouseOffset;
 static BOOL isDragging = FALSE;
+static int width = 500;
+static int height = 200;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -15,49 +17,50 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_LBUTTONDOWN:
         isDragging = TRUE;
-
         POINT mousePos;
-        GetCursorPos(&mousePos); // Mausposition in Bildschirmkoordinaten
-        ScreenToClient(hwnd, &mousePos); // Konvertiere zu Fensterkoordinaten
-        mouseOffset.x = mousePos.x;
-        mouseOffset.y = mousePos.y;
+        GetCursorPos(&mousePos);
 
-        SetCapture(hwnd); // Setze Mausaufnahme, um Bewegung auch außerhalb des Fensters zu verfolgen
+        // Hole Fensterposition
+        RECT rect;
+        GetWindowRect(hwnd, &rect);
+
+        // Berechne Offset zwischen Klickpunkt und Fensterecke
+        mouseOffset.x = mousePos.x - rect.left;
+        mouseOffset.y = mousePos.y - rect.top;
+
         return 0;
 
+    case WM_LBUTTONUP:
+        isDragging = FALSE;
+        GetWindowRect(hwnd, &rect);
+        int xPos = rect.left;
+        int yPos = rect.top;
+
+        // Setze die Fensterposition direkt auf die aktuelle Position
+        SetWindowPos(
+            hwnd,
+            NULL,
+            xPos,
+            yPosBottom,
+            rect.right - rect.left,
+            rect.bottom - rect.top,
+            SWP_NOZORDER | SWP_NOACTIVATE
+        );
+        return 0;
+    
     case WM_MOUSEMOVE:
-        if(isDragging){
+        if (isDragging){
+            POINT mousePos;
+            GetCursorPos(&mousePos);
+
             RECT rect;
             GetWindowRect(hwnd, &rect);
-            int width  = rect.right - rect.left;
-            int height = rect.bottom - rect.top;
-            int currentPos = rect.top;
+            /*int width = rect.right - rect.left;
+            int height = rect.bottom - rect.top;*/
 
-            int xPos = rect.left;  
-
-            while (currentPos < yPosBottom){
-            SetWindowPos(
-                hwnd,
-                NULL,
-                xPos,
-                currentPos,
-                width,
-                height,
-                SWP_NOZORDER | SWP_NOACTIVATE
-            );
-            currentPos++;
-            }
-            return 0;
+            SetWindowPos(hwnd, NULL, mousePos.x - mouseOffset.x, mousePos.y - mouseOffset.y, width, height, SWP_NOZORDER | SWP_NOACTIVATE);
         }
-    case WM_LBUTTONUP:
-    // Beende das Verschieben
-    if (isDragging) {
-        isDragging = FALSE;
-        ReleaseCapture(); // Beende die Mausaufnahme
-    }
-    return 0;
-    
-
+        return 0;
     }
 
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -77,8 +80,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     RegisterClassExA(&wc);
 
-    int width = 500;
-    int height = 200;
+    /*int width = 500;
+    int height = 200;*/
 
     RECT rcWorkArea;
     SystemParametersInfoA(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
@@ -90,7 +93,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     HWND hwnd = CreateWindowExA(
         0,                          // Erweiterter Fensterstil (0 = kein spezieller Stil)
         CLASS_NAME,                 // Fensterklasse
-        "Wer das liest ist gooner", // Text in der Titelleiste
+        "Wer das liest ist ein gooner", // Text in der Titelleiste
         WS_OVERLAPPEDWINDOW,        // Standard-Fenster-Stil (mit Titelleiste, Rahmen etc.)
         xPosBottom,                 // X-Position
         yPosBottom,                 // Y-Position
