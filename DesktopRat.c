@@ -37,34 +37,43 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         int yPos = rect.top;
 
         // Setze die Fensterposition direkt auf die aktuelle Position
-        SetWindowPos(
-            hwnd,
-            NULL,
-            xPos,
-            yPosBottom,
-            rect.right - rect.left,
-            rect.bottom - rect.top,
-            SWP_NOZORDER | SWP_NOACTIVATE
-        );
-        return 0;
+        while(yPos < yPosBottom){
+            SetWindowPos(
+                hwnd,
+                NULL,
+                xPos,
+                yPos,
+                rect.right - rect.left,
+                rect.bottom - rect.top,
+                SWP_NOZORDER | SWP_NOACTIVATE
+            );
+            yPos ++;
+        }
+            return 0;
     
     case WM_MOUSEMOVE:
         if (isDragging){
             POINT mousePos;
             GetCursorPos(&mousePos);
+            int yOffsetcalc = mousePos.y - mouseOffset.y;
 
             RECT rect;
             GetWindowRect(hwnd, &rect);
-            /*int width = rect.right - rect.left;
-            int height = rect.bottom - rect.top;*/
 
-            SetWindowPos(hwnd, NULL, mousePos.x - mouseOffset.x, mousePos.y - mouseOffset.y, width, height, SWP_NOZORDER | SWP_NOACTIVATE);
+            if(rect.top > yPosBottom){
+                SetWindowPos(hwnd, NULL, mousePos.x - mouseOffset.x, yPosBottom, width, height, SWP_NOZORDER | SWP_NOACTIVATE);
+                return 0;
+            }
+
+            SetWindowPos(hwnd, NULL, mousePos.x - mouseOffset.x, yOffsetcalc, width, height, SWP_NOZORDER | SWP_NOACTIVATE);
+        
         }
         return 0;
+ 
     }
-
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
+
 
 // WinMain: Einstiegspunkt
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
