@@ -1,11 +1,14 @@
 #include <windows.h>
+#include <gdiplus.h>
+#pragma comment (lib,"gdiplus.lib")
 
 const char CLASS_NAME[] = "MeineFensterklasse";
 static int yPosBottom = 0;
 static POINT mouseOffset;
 static BOOL isDragging = FALSE;
-static int width = 500;
-static int height = 200;
+static int width = 150;
+static int height = 150;
+ULONG_PTR gdiplusToken;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -35,6 +38,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         GetWindowRect(hwnd, &rect);
         int xPos = rect.left;
         int yPos = rect.top;
+        int i = 1;
 
         // Setze die Fensterposition direkt auf die aktuelle Position
         while(yPos < yPosBottom){
@@ -47,7 +51,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 rect.bottom - rect.top,
                 SWP_NOZORDER | SWP_NOACTIVATE
             );
-            yPos ++;
+            yPos++;
         }
             return 0;
     
@@ -61,7 +65,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             GetWindowRect(hwnd, &rect);
 
             if(rect.top > yPosBottom){
-                SetWindowPos(hwnd, NULL, mousePos.x - mouseOffset.x, yPosBottom, width, height, SWP_NOZORDER | SWP_NOACTIVATE);
+                if(rect.top != yPosBottom){
+                    SetWindowPos(hwnd, NULL, mousePos.x - mouseOffset.x, yPosBottom, width, height, SWP_NOZORDER | SWP_NOACTIVATE);
+                } 
                 return 0;
             }
 
@@ -69,7 +75,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         
         }
         return 0;
- 
+        
+    case WM_PAINT:
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+
+        Graphics graphics(hdc);
+        return 0;
+    
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
