@@ -80,7 +80,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
 
-        Graphics graphics(hdc);
+        HBITMAP hBitmap = (HBITMAP)LoadImage(NULL,"img\\JaneDoeTransparent.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+            if (hBitmap) {
+            HDC hdcMem = CreateCompatibleDC(hdc);
+            HBITMAP hOldBitmap = (HBITMAP)SelectObject(hdcMem, hBitmap);
+
+            BITMAP bitmap;
+            GetObject(hBitmap, sizeof(bitmap), &bitmap);
+
+            // Bitmap zeichnen
+            BitBlt(hdc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 10, 10, SRCCOPY);
+
+            // Ressourcen freigeben
+            SelectObject(hdcMem, hOldBitmap);
+            DeleteDC(hdcMem);
+            DeleteObject(hBitmap);
+        }
+
+        EndPaint(hwnd, &ps);
         return 0;
     
     }
@@ -116,7 +134,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         0,                          // Erweiterter Fensterstil (0 = kein spezieller Stil)
         CLASS_NAME,                 // Fensterklasse
         "Wer das liest ist ein gooner", // Text in der Titelleiste
-        WS_OVERLAPPEDWINDOW,        // Standard-Fenster-Stil (mit Titelleiste, Rahmen etc.)
+        WS_POPUP,        // Standard-Fenster-Stil (mit Titelleiste, Rahmen etc.)
         xPosBottom,                 // X-Position
         yPosBottom,                 // Y-Position
         width,                      // Breite
